@@ -127,3 +127,11 @@ body { min-height: 100vh; }
 .secondary-record-actions { display: flex; gap: 14px; flex-wrap: wrap; }
 .text-link-button { border: 0; background: transparent; color: var(--primary); font-size: 12px; font-weight: 700; padding: 5px 0; text-align: left; }
 .text-link-button:hover { text-decoration: underline; }
+
+
+/* v1.3 - diário de observações por turno */
+.diary-card { margin-top: 12px; }
+.diary-list { display: grid; gap: 8px; max-height: 340px; overflow: auto; padding-right: 2px; }
+.diary-entry { white-space: pre-wrap; overflow-wrap: anywhere; border: 1px solid var(--border); border-radius: 12px; padding: 11px 12px; background: #fafafa; color: #344054; font-size: 13px; line-height: 1.5; }
+.diary-textarea { min-height: 105px; }
+.history-diary { border-top: 1px solid var(--border); padding-top: 12px; }

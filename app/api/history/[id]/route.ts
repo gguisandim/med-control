@@ -24,7 +24,7 @@ export async function PATCH(
     if (!id || caregiverName.length < 2 || !/^\d{4}-\d{2}-\d{2}$/.test(shiftDate) || !validShifts.has(shiftType)) {
       return NextResponse.json({ error: "Confira o responsável, a data e o turno." }, { status: 400 });
     }
-    if (caregiverName.length > 120 || (notes?.length || 0) > 3000) {
+    if (caregiverName.length > 120 || (notes?.length || 0) > 20000) {
       return NextResponse.json({ error: "Um dos campos de texto ficou grande demais." }, { status: 400 });
     }
 

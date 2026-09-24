@@ -13,6 +13,7 @@ Aplicação web simples para registrar administração de medicamentos por turno
 - O aplicativo troca automaticamente de turno às 07:30 e 19:30.
 - Não existe mais a etapa obrigatória de **finalizar turno**.
 - Cada medicamento é salvo **individualmente e imediatamente** no banco.
+- O turno possui um **Diário / Observações**: cada anotação é salva na hora com data, horário e nome do responsável, sem precisar finalizar o turno.
 - Depois de salvar um medicamento, é seguro fechar o aplicativo e retornar mais tarde: o progresso do turno será recarregado do Supabase.
 - Ao iniciar um turno, o sistema cria um **snapshot** dos medicamentos ativos. Alterações futuras no cadastro não modificam os registros já criados.
 - Itens podem ser `Administrado`, `Não administrado` ou `Pendente`.
@@ -31,9 +32,9 @@ Aplicação web simples para registrar administração de medicamentos por turno
 - Vercel
 - CSS responsivo, pensado para celular
 
-## Atualizando da versão 1.1
+## Atualizando da versão 1.1 ou 1.2
 
-Esta versão **não exige alteração no banco**. Ela usa as mesmas tabelas e colunas existentes.
+Esta versão **não exige alteração no banco**. O diário reaproveita o campo `notes` já existente na tabela `shifts`. Ela usa as mesmas tabelas e colunas existentes.
 
 O campo `finished_at` da tabela `shifts` pode continuar no banco por compatibilidade com registros antigos, mas o fluxo novo não depende dele.
 
@@ -111,6 +112,14 @@ Em **Project > Settings > Environment Variables**, cadastre as mesmas variáveis
 6. O aplicativo pode ser fechado.
 
 Ao voltar mais tarde, os medicamentos já registrados continuam marcados e os demais permanecem pendentes.
+
+### Diário / observações do turno
+
+1. Na tela **Hoje**, escreva em **Nova anotação**.
+2. Toque em **Salvar anotação**.
+3. A entrada recebe automaticamente data, hora e o responsável atual.
+4. Outras anotações podem ser acrescentadas ao longo do mesmo turno.
+5. Tudo continua disponível no Histórico.
 
 ### Histórico
 

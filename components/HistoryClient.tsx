@@ -10,6 +10,12 @@ function formatShiftDate(date: string) {
   return new Intl.DateTimeFormat("pt-BR", { timeZone: "UTC" }).format(new Date(Date.UTC(y, m - 1, d, 12)));
 }
 
+
+function diaryEntries(value: string | null) {
+  if (!value?.trim()) return [];
+  return value.split(/\n\n---\n\n/g).map((entry) => entry.trim()).filter(Boolean);
+}
+
 function formatDateTime(value: string | null) {
   if (!value) return "—";
   return new Intl.DateTimeFormat("pt-BR", {
@@ -160,7 +166,7 @@ export default function HistoryClient({ shifts }: { shifts: ShiftWithItems[] }) 
                         <option value="night">Noite</option>
                       </select>
                     </label>
-                    <label className="label">Observações do turno
+                    <label className="label">Diário / observações do turno
                       <textarea className="textarea" value={editingState.notes} onChange={(e) => setEdit({ ...editingState, notes: e.target.value })} />
                     </label>
                   </div>
@@ -214,7 +220,14 @@ export default function HistoryClient({ shifts }: { shifts: ShiftWithItems[] }) 
                       </span>
                     </div>
                   ))}
-                  {shift.notes ? <div className="alert alert-info"><strong>Observações do turno:</strong> {shift.notes}</div> : null}
+                  {shift.notes ? (
+                    <div className="history-diary stack">
+                      <strong>Diário / observações do turno</strong>
+                      {diaryEntries(shift.notes).map((entry, index) => (
+                        <div className="diary-entry" key={`${shift.id}-note-${index}`}>{entry}</div>
+                      ))}
+                    </div>
+                  ) : null}
                   <div className="small">Registro do turno criado em {formatDateTime(shift.started_at)}</div>
                   <button className="button button-outline" onClick={() => startEdit(shift)}><Pencil size={17} /> Editar histórico</button>
                 </>

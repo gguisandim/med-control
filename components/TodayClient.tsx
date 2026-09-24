@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, CircleAlert, Clock3, Moon, Pencil, Save, Sun, X } from "lucide-react";
+import { CheckCircle2, CircleAlert, Clock3, Moon, NotebookPen, Pencil, Save, Sun, X } from "lucide-react";
 import type { ItemStatus, ShiftType, ShiftWithItems } from "@/lib/types";
 
 type RegisterMode = "administered" | "not_administered";
@@ -15,6 +15,12 @@ function fmtTime(value: string | null) {
     minute: "2-digit",
     hourCycle: "h23",
   }).format(new Date(value));
+}
+
+
+function diaryEntries(value: string | null) {
+  if (!value?.trim()) return [];
+  return value.split(/\n\n---\n\n/g).map((entry) => entry.trim()).filter(Boolean);
 }
 
 function nowInBelem() {
@@ -71,6 +77,7 @@ export default function TodayClient({
   const [itemNotes, setItemNotes] = useState<Record<string, string>>({});
   const [editingCaregiver, setEditingCaregiver] = useState(false);
   const [caregiverDraft, setCaregiverDraft] = useState(initialShift?.caregiver_name || "");
+  const [diaryDraft, setDiaryDraft] = useState("");
 
   const counts = useMemo(() => {
     const items = initialShift?.items || [];
@@ -163,6 +170,33 @@ export default function TodayClient({
     router.refresh();
   }
 
+  async function saveDiaryEntry() {
+    if (!initialShift || !diaryDraft.trim()) {
+      setError("Escreva uma anotação antes de salvar.");
+      return;
+    }
+
+    setBusy("diary");
+    setError("");
+    setSuccess("");
+    const res = await fetch("/api/shifts/current", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: initialShift.id, diaryEntry: diaryDraft.trim() }),
+    });
+    setBusy(null);
+
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      setError(body.error || "Não foi possível salvar a anotação.");
+      return;
+    }
+
+    setDiaryDraft("");
+    setSuccess("Anotação salva no diário do turno.");
+    router.refresh();
+  }
+
   async function saveCaregiver() {
     if (!initialShift || caregiverDraft.trim().length < 2) {
       setError("Informe o nome do responsável.");
@@ -246,6 +280,45 @@ export default function TodayClient({
 
       {success ? <div className="alert alert-success">{success}</div> : null}
       {error ? <div className="error card">{error}</div> : null}
+
+      <section className="card stack diary-card">
+        <div>
+          <div className="row">
+            <div>
+              <h2 className="h2">Diário / observações do turno</h2>
+              <p className="subtle">Use este espaço para registrar acontecimentos gerais, cuidados, intercorrências ou qualquer informação que a família precise deixar para o próximo responsável.</p>
+            </div>
+            <NotebookPen size={24} />
+          </div>
+        </div>
+
+        {diaryEntries(initialShift.notes).length ? (
+          <div className="diary-list">
+            {diaryEntries(initialShift.notes).map((entry, index) => (
+              <div className="diary-entry" key={`${index}-${entry.slice(0, 20)}`}>
+                {entry}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="small">Ainda não há anotações gerais neste turno.</div>
+        )}
+
+        <label className="label">
+          Nova anotação
+          <textarea
+            className="textarea diary-textarea"
+            value={diaryDraft}
+            onChange={(e) => setDiaryDraft(e.target.value)}
+            maxLength={1500}
+            placeholder="Ex.: paciente descansou bem; recebeu visita; apresentou desconforto; orientação deixada para o próximo turno..."
+          />
+        </label>
+        <button className="button" disabled={busy === "diary" || !diaryDraft.trim()} onClick={saveDiaryEntry}>
+          <Save size={17} /> {busy === "diary" ? "Salvando..." : "Salvar anotação"}
+        </button>
+        <div className="small">Cada anotação é salva imediatamente com data, hora e o nome do responsável do turno. Você pode fechar o aplicativo depois de salvar.</div>
+      </section>
 
       <div className="section-title">Medicamentos deste turno</div>
       <div className="stack">
