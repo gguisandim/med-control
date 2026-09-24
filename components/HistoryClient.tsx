@@ -215,7 +215,7 @@ export default function HistoryClient({ shifts }: { shifts: ShiftWithItems[] }) 
                     </div>
                   ))}
                   {shift.notes ? <div className="alert alert-info"><strong>Observações do turno:</strong> {shift.notes}</div> : null}
-                  <div className="small">Iniciado em {formatDateTime(shift.started_at)} · {shift.finished_at ? `Finalizado em ${formatDateTime(shift.finished_at)}` : "Ainda não finalizado"}</div>
+                  <div className="small">Registro do turno criado em {formatDateTime(shift.started_at)}</div>
                   <button className="button button-outline" onClick={() => startEdit(shift)}><Pencil size={17} /> Editar histórico</button>
                 </>
               )}

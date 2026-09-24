@@ -27,7 +27,7 @@ export default async function HomePage() {
         </div>
 
         <div className="alert alert-info">
-          O aplicativo troca automaticamente de turno às 07:30 e às 19:30. Ao mudar de turno, a tela inicia um novo registro; tudo o que foi preenchido no turno anterior permanece salvo no Histórico.
+          O aplicativo troca automaticamente de turno às 07:30 e às 19:30. Quando o turno muda, um novo registro é iniciado; tudo o que já foi salvo permanece disponível no Histórico.
         </div>
 
         <TodayClient current={current} initialShift={shift} />

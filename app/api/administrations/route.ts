@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { hasSession } from "@/lib/session";
 import { getSupabaseAdmin } from "@/lib/supabase";
-import { administrationIsoForShift } from "@/lib/shift-time";
+import { administrationIsoForShift, getCurrentShift } from "@/lib/shift-time";
 import type { ShiftType } from "@/lib/types";
 
 export async function PATCH(request: Request) {
@@ -17,6 +17,9 @@ export async function PATCH(request: Request) {
     if (!id || !["pending", "administered", "not_administered"].includes(status)) {
       return NextResponse.json({ error: "Registro inválido." }, { status: 400 });
     }
+    if ((notes?.length || 0) > 2000) {
+      return NextResponse.json({ error: "A observação ficou grande demais." }, { status: 400 });
+    }
     if (status === "administered" && !/^\d{2}:\d{2}$/.test(administeredTime || "")) {
       return NextResponse.json({ error: "Informe o horário em que o medicamento foi administrado." }, { status: 400 });
     }
@@ -28,15 +31,19 @@ export async function PATCH(request: Request) {
       .select("shift_id")
       .eq("id", id)
       .single();
-    if (itemError) throw itemError;
+    if (itemError || !item) return NextResponse.json({ error: "Item não encontrado." }, { status: 404 });
 
     const { data: shift, error: shiftError } = await supabase
       .from("shifts")
-      .select("finished_at, shift_date, shift_type")
+      .select("shift_date, shift_type")
       .eq("id", item.shift_id)
       .single();
-    if (shiftError) throw shiftError;
-    if (shift.finished_at) return NextResponse.json({ error: "Este turno já foi finalizado. Faça a correção pelo Histórico." }, { status: 409 });
+    if (shiftError || !shift) return NextResponse.json({ error: "Turno não encontrado." }, { status: 404 });
+
+    const current = getCurrentShift();
+    if (shift.shift_date !== current.shiftDate || shift.shift_type !== current.shiftType) {
+      return NextResponse.json({ error: "Esse turno já terminou. Faça a correção pelo Histórico." }, { status: 409 });
+    }
 
     let administeredAt: string | null = null;
     if (status === "administered") {
@@ -50,9 +57,8 @@ export async function PATCH(request: Request) {
     const patch: Record<string, unknown> = {
       status,
       administered_at: administeredAt,
+      notes: status === "pending" ? null : notes ?? null,
     };
-    if (status === "pending") patch.notes = null;
-    else if (notes !== undefined) patch.notes = notes;
 
     const { error } = await supabase.from("shift_items").update(patch).eq("id", id);
     if (error) throw error;
@@ -60,6 +66,6 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ error: "Erro ao atualizar o registro." }, { status: 500 });
+    return NextResponse.json({ error: "Erro ao salvar o registro." }, { status: 500 });
   }
 }

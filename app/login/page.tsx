@@ -10,7 +10,7 @@ export default async function LoginPage() {
       <section className="card login-card stack">
         <div>
           <h1 className="h1">Controle de medicamentos</h1>
-          <p className="subtle">Acesso restrito à família e aos cuidadores.</p>
+          <p className="subtle">Acesso restrito à família e aos cuidadores. Depois de entrar, este aparelho permanece conectado por até 7 dias.</p>
         </div>
         <LoginForm />
       </section>

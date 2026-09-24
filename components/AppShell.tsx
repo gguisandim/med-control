@@ -31,7 +31,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           </div>
           <button className="button button-outline" style={{ minHeight: 40, padding: "8px 10px" }} onClick={logout}>
             <LogOut size={17} aria-hidden />
-            <span className="small">Sair</span>
+            <span className="small">Sair deste dispositivo</span>
           </button>
         </header>
         {children}

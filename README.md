@@ -1,20 +1,26 @@
 # Controle de Medicamentos — família
 
-Aplicação web simples para registrar administração de medicamentos por turno.
+Aplicação web simples para registrar administração de medicamentos por turno, com persistência imediata no Supabase.
 
 ## Regras configuradas
 
 - Turno **DIA**: 07:30 até 19:29.
 - Turno **NOITE**: 19:30 até 07:29 do dia seguinte.
 - Acesso por **uma única senha compartilhada**, sem e-mail.
-- Cada turno registra o nome do responsável.
-- O aplicativo troca automaticamente de turno às 07:30 e 19:30. O turno anterior permanece salvo no Histórico.
-- Ao iniciar o turno, o sistema cria um **snapshot** dos medicamentos ativos. Alterações futuras no cadastro não modificam o histórico antigo.
-- Itens podem ser marcados como `Administrado`, `Não administrado` ou `Pendente`.
-- Ao administrar, a pessoa informa o **horário real da administração** ou toca em **Agora**.
-- O Histórico pode ser corrigido: responsável, data, turno, observações, status e data/hora real dos itens.
+- A sessão do aparelho dura até **7 dias**; existe o botão **Sair deste dispositivo**.
+- Na primeira abertura de cada turno, o sistema pede o nome do responsável.
+- O nome do responsável fica salvo e pode ser corrigido durante o próprio turno.
+- O aplicativo troca automaticamente de turno às 07:30 e 19:30.
+- Não existe mais a etapa obrigatória de **finalizar turno**.
+- Cada medicamento é salvo **individualmente e imediatamente** no banco.
+- Depois de salvar um medicamento, é seguro fechar o aplicativo e retornar mais tarde: o progresso do turno será recarregado do Supabase.
+- Ao iniciar um turno, o sistema cria um **snapshot** dos medicamentos ativos. Alterações futuras no cadastro não modificam os registros já criados.
+- Itens podem ser `Administrado`, `Não administrado` ou `Pendente`.
+- Ao registrar como administrado, a pessoa informa o **horário real** ou toca em **Agora**.
+- Um item já registrado pode ser editado durante o turno atual ou corrigido posteriormente no Histórico.
+- O Histórico permite corrigir responsável, data, turno, observações, status e data/hora real dos itens.
 - O cadastro de medicamentos pode ser editado, suspenso ou reativado sem apagar registros antigos.
-- Em **Ajustes > Dados de demonstração** é possível criar e remover turnos fictícios para testar Histórico e Resumo.
+- Em **Ajustes > Teste da aplicação** é possível criar e remover dados fictícios para testar Histórico e Resumo.
 
 > Este projeto é um registro operacional. Não contém lógica para decidir dose, via, horário, suspensão ou qualquer conduta clínica. Essas informações devem reproduzir a orientação do profissional de saúde responsável.
 
@@ -25,14 +31,20 @@ Aplicação web simples para registrar administração de medicamentos por turno
 - Vercel
 - CSS responsivo, pensado para celular
 
+## Atualizando da versão 1.1
+
+Esta versão **não exige alteração no banco**. Ela usa as mesmas tabelas e colunas existentes.
+
+O campo `finished_at` da tabela `shifts` pode continuar no banco por compatibilidade com registros antigos, mas o fluxo novo não depende dele.
+
 ## 1. Criar o banco no Supabase
+
+Se estiver instalando do zero:
 
 1. Crie um projeto no Supabase.
 2. Abra **SQL Editor**.
 3. Cole todo o conteúdo de `supabase/schema.sql`.
 4. Execute.
-
-Se você já executou a versão anterior do `schema.sql`, esta versão não exige novas colunas: as novas funções usam a mesma estrutura de banco.
 
 ## 2. Configurar o projeto local
 
@@ -55,7 +67,7 @@ APP_TIMEZONE=America/Belem
 Importante:
 
 - `SUPABASE_URL` deve terminar em `.supabase.co`, sem `/rest/v1/`.
-- Use a chave secreta de servidor (`sb_secret_...`) na variável `SUPABASE_SERVICE_ROLE_KEY`.
+- Use a chave secreta de servidor (`sb_secret_...`) em `SUPABASE_SERVICE_ROLE_KEY`.
 - Nunca use `NEXT_PUBLIC_` nessa chave.
 
 Para gerar `SESSION_SECRET` com Node:
@@ -81,36 +93,29 @@ http://localhost:3000
 
 Em **Project > Settings > Environment Variables**, cadastre as mesmas variáveis do `.env.local` e faça um novo deploy.
 
-## Uso
+## Fluxo diário
 
-### Hoje
+### Primeira abertura do turno
 
-Inicie o turno com o nome do responsável. Em cada medicamento, informe o horário real ou use **Agora**, depois confirme a administração. Também é possível registrar `Não administrado` com motivo opcional.
+1. Abra o aplicativo.
+2. Informe o nome do responsável.
+3. O sistema cria o registro do turno e copia a lista atual de medicamentos.
+
+### Registrar um medicamento
+
+1. Abra o app.
+2. Toque em **Administrado** ou **Não administrado**.
+3. Se administrado, confira/informe o horário real ou use **Agora**.
+4. Toque em **Salvar registro**.
+5. O dado é gravado imediatamente no Supabase.
+6. O aplicativo pode ser fechado.
+
+Ao voltar mais tarde, os medicamentos já registrados continuam marcados e os demais permanecem pendentes.
 
 ### Histórico
 
-Expanda um turno e use **Editar histórico**. É possível corrigir:
-
-- nome do responsável;
-- data;
-- turno;
-- observação geral;
-- status de cada item;
-- data e horário real de administração;
-- observação do item.
-
-A correção histórica altera somente aquele turno e seus snapshots; não muda o cadastro atual dos medicamentos.
-
-### Resumo
-
-Mostra os últimos 14 turnos registrados, quantidade de administrados, não administrados, pendências e exceções recentes.
-
-### Ajustes
-
-Permite adicionar, editar, suspender e reativar medicamentos. Alterações valem para novos turnos; snapshots antigos permanecem intactos.
+O Histórico é independente do cadastro atual dos medicamentos. Alterar um registro antigo não modifica a medicação configurada para os próximos turnos.
 
 ### Dados fake
 
-Em **Ajustes > Teste da aplicação**, clique em **Adicionar dados fake**. O sistema procura datas/turnos livres, cria registros fictícios identificados com `[DEMO]` e não sobrescreve turnos existentes.
-
-Depois de testar, use **Remover dados fake**. Apenas turnos cujo responsável começa com `[DEMO]` são excluídos; os registros reais não são tocados.
+Em **Ajustes > Teste da aplicação**, use **Adicionar dados fake** para preencher Histórico e Resumo com registros de demonstração. Depois, **Remover dados fake** exclui apenas turnos cujo responsável começa com `[DEMO]`.

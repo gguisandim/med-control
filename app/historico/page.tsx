@@ -15,7 +15,7 @@ export default async function HistoryPage() {
       <div className="stack">
         <div>
           <h1 className="h1">Histórico</h1>
-          <p className="subtle">Consulte e corrija turnos anteriores sem alterar o cadastro atual dos medicamentos.</p>
+          <p className="subtle">Consulte e corrija registros de turnos anteriores sem alterar o cadastro atual dos medicamentos.</p>
         </div>
         <HistoryClient shifts={shifts} />
       </div>

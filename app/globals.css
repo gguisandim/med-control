@@ -103,3 +103,27 @@ body { min-height: 100vh; }
   .history-item-row { display: grid; }
   .settings-actions { width: 100%; display: grid; grid-template-columns: 1fr 1fr; }
 }
+
+/* v1.2 - fluxo de registro contínuo */
+.alert-success { background: var(--success-soft); color: #067647; }
+.save-info { margin-top: 12px; }
+.caregiver-row { align-items: flex-start; }
+.caregiver-main { min-width: 0; flex: 1; }
+.responsible-display { display: flex; align-items: center; gap: 8px; margin-top: 3px; }
+.inline-edit-caregiver { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 7px; align-items: center; margin-top: 5px; }
+.icon-button { width: 42px; height: 42px; border-radius: 11px; border: 1px solid #d0d5dd; background: white; display: inline-grid; place-items: center; color: #344054; }
+.icon-button-primary { background: var(--primary); color: white; border-color: var(--primary); }
+.register-panel { border-top: 1px solid var(--border); padding-top: 12px; }
+.saved-record-box { display: grid; gap: 10px; border-top: 1px solid var(--border); padding-top: 12px; }
+.button-small { min-height: 40px; padding: 9px 12px; justify-self: start; }
+.text-danger-button { border: 0; background: transparent; color: var(--danger); font-size: 12px; font-weight: 700; padding: 5px 0; text-align: left; justify-self: start; }
+.text-danger-button:hover { text-decoration: underline; }
+
+@media (max-width: 560px) {
+  .caregiver-row { display: grid; }
+  .inline-edit-caregiver { grid-template-columns: minmax(0, 1fr) auto auto; }
+  .button-small { width: 100%; }
+}
+.secondary-record-actions { display: flex; gap: 14px; flex-wrap: wrap; }
+.text-link-button { border: 0; background: transparent; color: var(--primary); font-size: 12px; font-weight: 700; padding: 5px 0; text-align: left; }
+.text-link-button:hover { text-decoration: underline; }

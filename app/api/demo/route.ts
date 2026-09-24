@@ -58,9 +58,7 @@ export async function POST() {
     for (let s = 0; s < slots.length; s++) {
       const slot = slots[s];
       const startTime = slot.type === "day" ? "07:32" : "19:32";
-      const finishTime = slot.type === "day" ? "19:18" : "07:18";
       const startedAt = administrationIsoForShift(slot.date, slot.type, startTime);
-      const finishedAt = administrationIsoForShift(slot.date, slot.type, finishTime);
 
       const { data: shift, error: shiftError } = await supabase
         .from("shifts")
@@ -69,7 +67,6 @@ export async function POST() {
           shift_type: slot.type,
           caregiver_name: demoNames[s % demoNames.length],
           started_at: startedAt,
-          finished_at: finishedAt,
           notes: s === 2 ? "Registro de demonstração com uma observação geral do turno." : "Dados fictícios para visualização do aplicativo.",
         })
         .select("id")

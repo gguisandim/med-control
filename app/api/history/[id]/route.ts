@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { hasSession } from "@/lib/session";
 import { getSupabaseAdmin } from "@/lib/supabase";
-import { localDateTimeToIso } from "@/lib/shift-time";
+import { getCurrentShift, localDateTimeToIso } from "@/lib/shift-time";
 
 const validStatuses = new Set(["pending", "administered", "not_administered"]);
 const validShifts = new Set(["day", "night"]);
@@ -51,12 +51,14 @@ export async function PATCH(
     const supabase = getSupabaseAdmin();
     const { data: shift, error: shiftError } = await supabase
       .from("shifts")
-      .select("id, finished_at, shift_date, shift_type")
+      .select("id, shift_date, shift_type")
       .eq("id", id)
       .single();
     if (shiftError || !shift) return NextResponse.json({ error: "Turno não encontrado." }, { status: 404 });
-    if (!shift.finished_at && (shift.shift_date !== shiftDate || shift.shift_type !== shiftType)) {
-      return NextResponse.json({ error: "Para alterar a data ou o tipo de um turno em andamento, finalize o turno primeiro." }, { status: 409 });
+    const current = getCurrentShift();
+    const isCurrentShift = shift.shift_date === current.shiftDate && shift.shift_type === current.shiftType;
+    if (isCurrentShift && (shift.shift_date !== shiftDate || shift.shift_type !== shiftType)) {
+      return NextResponse.json({ error: "A data ou o tipo do turno atual não pode ser alterado enquanto ele está em andamento. Os demais campos podem ser corrigidos normalmente." }, { status: 409 });
     }
 
     const { data: conflict, error: conflictError } = await supabase
