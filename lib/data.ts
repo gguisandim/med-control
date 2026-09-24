@@ -52,7 +52,7 @@ export async function getRecentShifts(limit = 30): Promise<ShiftWithItems[]> {
   if (error) throw error;
   if (!shifts?.length) return [];
 
-  const ids = shifts.map((s) => s.id);
+  const ids = (shifts as Shift[]).map((s: Shift) => s.id);
   const { data: items, error: itemsError } = await supabase
     .from("shift_items")
     .select("*")

@@ -2,7 +2,7 @@
 
 import { FormEvent, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, CircleAlert, Moon, Sun } from "lucide-react";
+import { CheckCircle2, CircleAlert, Clock3, Moon, Sun } from "lucide-react";
 import type { ItemStatus, ShiftType, ShiftWithItems } from "@/lib/types";
 
 function fmtTime(value: string | null) {
@@ -11,7 +11,19 @@ function fmtTime(value: string | null) {
     timeZone: "America/Belem",
     hour: "2-digit",
     minute: "2-digit",
+    hourCycle: "h23",
   }).format(new Date(value));
+}
+
+function nowInBelem() {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "America/Belem",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(new Date());
+  const get = (type: "hour" | "minute") => parts.find((p) => p.type === type)?.value || "00";
+  return `${get("hour")}:${get("minute")}`;
 }
 
 export default function TodayClient({
@@ -26,6 +38,7 @@ export default function TodayClient({
   const [notes, setNotes] = useState(initialShift?.notes || "");
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const [administrationTimes, setAdministrationTimes] = useState<Record<string, string>>({});
 
   const counts = useMemo(() => {
     const items = initialShift?.items || [];
@@ -62,12 +75,18 @@ export default function TodayClient({
       itemNotes = window.prompt("Motivo (opcional):") || "";
     }
 
+    const administeredTime = status === "administered" ? administrationTimes[id] : undefined;
+    if (status === "administered" && !administeredTime) {
+      setError("Informe o horário em que o item foi administrado antes de confirmar.");
+      return;
+    }
+
     setBusy(id);
     setError("");
     const res = await fetch("/api/administrations", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, status, notes: itemNotes }),
+      body: JSON.stringify({ id, status, notes: itemNotes, administeredTime }),
     });
     setBusy(null);
     if (!res.ok) {
@@ -169,16 +188,36 @@ export default function TodayClient({
 
               {item.status !== "pending" ? (
                 <div className="med-admin-row small">
-                  {item.status === "administered" && item.administered_at ? `Registrado às ${fmtTime(item.administered_at)}.` : "Registrado como não administrado."}
+                  {item.status === "administered" && item.administered_at ? `Administrado às ${fmtTime(item.administered_at)}.` : "Registrado como não administrado."}
                   {item.notes ? ` Observação: ${item.notes}` : ""}
                 </div>
               ) : null}
 
               {!locked ? (
                 item.status === "pending" ? (
-                  <div className="actions">
-                    <button className="button" disabled={busy === item.id} onClick={() => updateItem(item.id, "administered")}>Administrado</button>
-                    <button className="button button-danger" disabled={busy === item.id} onClick={() => updateItem(item.id, "not_administered")}>Não administrado</button>
+                  <div className="stack compact-stack">
+                    <div className="time-register">
+                      <label className="label time-field">
+                        Horário em que foi administrado
+                        <input
+                          className="input"
+                          type="time"
+                          value={administrationTimes[item.id] || ""}
+                          onChange={(e) => setAdministrationTimes((old) => ({ ...old, [item.id]: e.target.value }))}
+                        />
+                      </label>
+                      <button
+                        type="button"
+                        className="button button-outline now-button"
+                        onClick={() => setAdministrationTimes((old) => ({ ...old, [item.id]: nowInBelem() }))}
+                      >
+                        <Clock3 size={16} /> Agora
+                      </button>
+                    </div>
+                    <div className="actions">
+                      <button className="button" disabled={busy === item.id} onClick={() => updateItem(item.id, "administered")}>Confirmar administração</button>
+                      <button className="button button-danger" disabled={busy === item.id} onClick={() => updateItem(item.id, "not_administered")}>Não administrado</button>
+                    </div>
                   </div>
                 ) : (
                   <button className="button button-outline" disabled={busy === item.id} onClick={() => updateItem(item.id, "pending")}>Corrigir registro</button>
@@ -189,13 +228,14 @@ export default function TodayClient({
         )}
       </div>
 
+      {error ? <div className="error card" style={{ marginTop: 12 }}>{error}</div> : null}
+
       {!locked ? (
         <section className="card stack" style={{ marginTop: 16 }}>
           <label className="label">
             Observações do turno
             <textarea className="textarea" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Opcional" />
           </label>
-          {error ? <div className="error">{error}</div> : null}
           <button className="button button-secondary" disabled={busy === "finish"} onClick={finishShift}>
             {busy === "finish" ? "Finalizando..." : "Finalizar turno"}
           </button>

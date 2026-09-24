@@ -80,3 +80,26 @@ body { min-height: 100vh; }
   .actions, .grid2, .kpis { grid-template-columns: 1fr; }
   .h1 { font-size: 24px; }
 }
+
+/* v1.1 */
+.button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; }
+.compact-stack { gap: 8px; }
+.time-register { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: end; }
+.time-field { min-width: 0; }
+.now-button { min-width: 92px; }
+.history-summary { display: inline-flex; width: calc(100% - 20px); margin-left: 8px; }
+.history-item-row { align-items: flex-start; }
+.history-edit-item { border: 1px solid var(--border); border-radius: 12px; padding: 12px; background: #fafafa; }
+.edit-panel { border: 1px solid var(--border); border-radius: 12px; padding: 12px; background: #fcfcfd; }
+.compact-title { margin: 6px 0 0; }
+.badge-demo { margin-left: 4px; padding: 3px 6px; background: #f4ebff; color: #6941c6; vertical-align: middle; }
+.settings-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.medication-row { align-items: flex-start; }
+
+@media (max-width: 560px) {
+  .time-register { grid-template-columns: 1fr; }
+  .now-button { width: 100%; }
+  .history-summary, .history-item-row, .medication-row { align-items: flex-start; }
+  .history-item-row { display: grid; }
+  .settings-actions { width: 100%; display: grid; grid-template-columns: 1fr 1fr; }
+}

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { hasSession } from "@/lib/session";
 import { getCurrentShift } from "@/lib/shift-time";
 import { getSupabaseAdmin } from "@/lib/supabase";
+import type { Medication } from "@/lib/types";
 
 export async function POST(request: Request) {
   if (!(await hasSession())) return NextResponse.json({ error: "Não autorizado." }, { status: 401 });
@@ -42,7 +43,7 @@ export async function POST(request: Request) {
     if (medsError) throw medsError;
 
     if (medications?.length) {
-      const snapshots = medications.map((med) => ({
+      const snapshots = (medications as Medication[]).map((med: Medication) => ({
         shift_id: shift.id,
         medication_id: med.id,
         name: med.name,
